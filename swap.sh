@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$(id -u)" != "0" ]; then
+	echo "Sorry, you are not root."
+	exit 1
+fi
+
 # Do argument checks
 if [ ! "$#" -ge 1 ]; then
     echo "Usage: $0 {size}"
@@ -8,16 +13,6 @@ if [ ! "$#" -ge 1 ]; then
     exit 1
 fi
 
-
-# Messages
-echo "=========================================================="
-echo "Welcome to CraftThatBlock's Ubuntu Swap install script!"
-echo "This script will automatically setup a swap file,"
-echo "install it, and do everything else needed."
-echo "All you have to do is enter your password and hit enter!"
-echo "=========================================================="
-echo ""
-
 # Setup variables
 SWAP_SIZE=$1
 SWAP_PATH="/swapfile"
@@ -25,25 +20,21 @@ if [ ! -z "$2" ]; then
     SWAP_PATH=$2
 fi
 
+if [ -f $SWAP_PATH ]; then
+    echo "You already have this swap file!"
+    exit 1
+fi
 
 # Start script
-sudo fallocate -l $SWAP_SIZE $SWAP_PATH
-sudo chmod 600 $SWAP_PATH
-sudo mkswap $SWAP_PATH
-sudo swapon $SWAP_PATH
-echo "$SWAP_PATH   none    swap    sw    0   0" | sudo tee /etc/fstab -a
-sudo sysctl vm.swappiness=10
-echo "vm.swappiness=10" | sudo tee /etc/sysctl.conf -a
-sudo sysctl vm.vfs_cache_pressure=50
-echo "vm.vfs_cache_pressure=50" | sudo tee /etc/sysctl.conf -a
+fallocate -l $SWAP_SIZE $SWAP_PATH
+chmod 600 $SWAP_PATH
+mkswap $SWAP_PATH
+swapon $SWAP_PATH
+echo "$SWAP_PATH   none    swap    sw    0   0" | tee /etc/fstab -a
+sysctl vm.swappiness=10
+echo "vm.swappiness=10" | tee /etc/sysctl.conf -a
+sysctl vm.vfs_cache_pressure=50
+echo "vm.vfs_cache_pressure=50" | tee /etc/sysctl.conf -a
 
-
-# Done
-echo ""
-echo "=========================================================="
-echo "Done! The apply these changes you simply have to restart:"
-echo "sudo reboot now"
-echo "=========================================================="
-echo ""
 
 
